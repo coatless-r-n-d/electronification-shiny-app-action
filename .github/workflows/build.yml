@@ -1,0 +1,58 @@
+name: Build Electron installers
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # release job uploads artifacts to a GitHub Release
+
+jobs:
+  build:
+    name: ${{ matrix.runtime }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  runtime: shinylive }
+          - { os: macos-latest,   runtime: shinylive }
+          - { os: windows-latest, runtime: shinylive }
+          - { os: macos-latest,   runtime: bundled }
+          - { os: windows-latest, runtime: bundled }
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: build
+        uses: coatless-actions/shiny-to-electron@feat/initial-action
+        with:
+          appdir: app
+          app-name: Electronification Demo
+          runtime-strategy: ${{ matrix.runtime }}
+
+      - name: Show build outputs
+        shell: bash
+        run: |
+          echo "electron-app-path: ${{ steps.build.outputs.electron-app-path }}"
+          echo "dist-path:         ${{ steps.build.outputs.dist-path }}"
+          echo "artifact-name:     ${{ steps.build.outputs.artifact-name }}"
+
+  release:
+    name: Publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
