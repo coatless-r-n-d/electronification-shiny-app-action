@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - id: build
-        uses: coatless-actions/shiny-to-electron@feat/initial-action
+        uses: coatless-actions/shiny-to-electron@v1
         with:
           appdir: app
           app-name: Electronification Demo
