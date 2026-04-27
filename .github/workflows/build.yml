@@ -32,7 +32,12 @@ jobs:
         uses: coatless-actions/shiny-to-electron@v1
         with:
           appdir: app
-          app-name: Electronification Demo
+          # Embed the strategy in the app name so each matrix entry
+          # produces a distinct installer filename. Otherwise the two
+          # macOS builds (shinylive and bundled) and the two Windows
+          # builds would write identical filenames and collide on the
+          # release.
+          app-name: Electronification Demo ${{ matrix.runtime }}
           runtime-strategy: ${{ matrix.runtime }}
 
       - name: Show build outputs
